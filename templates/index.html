@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPF-InfoJobs Demo App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+            background-color: #fff;
+        }
+        .section {
+            margin: 10px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        #cv-section, #cv-analysis, #full-report, #job-offer {
+            flex-basis: 100%;
+        }
+        #left-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        #middle-column, #right-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        #full-report-text, #full-report-figure {
+            flex: 1;
+            margin-bottom: 20px;
+        }
+        #full-report-figure {
+            border: 1px dashed #ccc; /* Placeholder for the figure space */
+            text-align: center;
+            padding: 20px;
+        }
+        .toggle {
+            background-color: #e7e7e7;
+            color: #444;
+            cursor: pointer;
+            padding: 10px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            outline: none;
+            transition: 0.4s;
+        }
+        .toggle.active, .toggle:hover {
+            background-color: #ccc;
+        }
+        .content {
+            padding: 0 18px;
+            overflow: hidden;
+            background-color: #f1f1f1;
+            transition: max-height 0.2s ease-out;
+        }
+        .hidden {
+            max-height: 0;
+        }
+        .file-input {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="left-column">
+    <div id="cv-section" class="section file-input">
+        <h2>CV Upload</h2>
+        <input type="file" id="cv-upload" name="cv-upload" accept=".pdf,.doc,.docx" />
+        <button onclick="uploadFile()">Upload</button>
+    </div>
+    <div id="cv-analysis" class="section">
+        <h2>CV Analysis</h2>
+        <button class="toggle" onclick="toggleContent(this, '.cv-content')">Experiences</button>
+        <div class="content cv-content hidden">
+            <!-- Dynamic content goes here -->
+            <p>CV analysis details...</p>
+        </div>
+    </div>
+</div>
+
+<div id="middle-column">
+    <div id="full-report" class="section">
+        <h2>Full Report</h2>
+        <div id="full-report-text">
+            <!-- Dynamic content goes here -->
+            <p>Text output of the full report...</p>
+        </div>
+        <div id="full-report-figure">
+            <!-- Placeholder for the figure -->
+            <p>Figure space</p>
+        </div>
+    </div>
+</div>
+
+<div id="right-column">
+    <div id="job-offer" class="section">
+        <h2>Job Offer</h2>
+        <!-- Dynamic content goes here -->
+        <p>Job offer details...</p>
+    </div>
+</div>
+
+<script>
+    function toggleContent(toggleButton, contentSelector) {
+        var content = document.querySelector(contentSelector);
+        var isHidden = content.classList.contains('hidden');
+        content.classList.toggle('hidden', !isHidden);
+        toggleButton.classList.toggle('active', isHidden);
+    }
+
+    function uploadFile() {
+        // Placeholder function for file upload
+        // Integrate with Flask backend to handle file upload
+        alert('File would be uploaded and processed.');
+    }
+
+    function populateCvData() {
+    // Fetch the CV data from the Flask route
+    fetch('/get-cv-data')
+        .then(response => response.json())
+        .then(data => {
+            // Process and display the data on the page
+            // ...
+        })
+        .catch(error => console.error('Error:', error));
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,4 @@
+ESCO_mpnet_db filter=lfs diff=lfs merge=lfs -text
+mpnet_embeddings_db filter=lfs diff=lfs merge=lfs -text
+ESCO_mpnet_db/* filter=lfs diff=lfs merge=lfs -text
+mpnet_embeddings_db/* filter=lfs diff=lfs merge=lfs -text
