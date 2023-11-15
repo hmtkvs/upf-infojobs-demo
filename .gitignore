@@ -1,2 +1,5 @@
 mpnet_embeddings_db
 ESCO_mpnet_db
+__pycache__/
+__pycache__/*
+__pycache__

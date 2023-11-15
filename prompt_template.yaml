@@ -25,14 +25,16 @@ full-report-template: "\n        I have a curriculum vitae (CV) and a job offer.
   \ the CV and the job offer.\n            - Any qualifications or experiences in\
   \ the CV that are exactly what the job offer requires.\n            - Areas where\
   \ the CV falls short of the job offer's requirements, including lack of specific\
-  \ experiences, necessary qualifications, or required certifications.\n\n\n     \
-  \   Return the analysis in the following JSON structure:\n        {{\n         \
-  \   \"ESCO Analysis\": {{\n                \"Job Profile Match\": \"\",\n      \
-  \          \"Educational Qualifications Comparison\": \"\",\n                \"\
-  Skills and Proficiencies Match\": \"\",\n                \"Certifications and Regulatory\
-  \ Knowledge\": \"\",\n                \"Overall Summary\": {{\n                \
-  \    \"Strong Matches\": \"\",\n                    \"Potential Gaps\": \"\"\n \
-  \               }}\n            }}\n        }}\n\n        Note: The insights should\
+  \ experiences, necessary qualifications, or required certifications.\n         \
+  \   5. Avoid using expressions that directly affect the decision, are subjective\
+  \ and dominant. Be concrete and clear, explain your thoughts in a transparent way.\n\
+  \n        Return the analysis in the following JSON structure:\n        {{\n   \
+  \         \"ESCO Analysis\": {{\n                \"Educational Qualifications Comparison\"\
+  : \"\",\n                \"Skills and Proficiencies Match\": \"\",\n           \
+  \     \"Certifications and Regulatory Knowledge\": \"\",\n                \"Job\
+  \ Profile Match\": \"\",\n                \"Overall Summary\": {{\n            \
+  \        \"Strong Matches\": \"\",\n                    \"Potential Gaps\": \"\"\
+  \n                }}\n            }}\n        }}\n\n        Note: The insights should\
   \ be based on the retrieved information from the ESCO Taxonomy to ensure an informed\
   \ and accurate analysis.\n        "
 job-offer-processing-prompt: "\n        Please use a retriever to find job offers\
