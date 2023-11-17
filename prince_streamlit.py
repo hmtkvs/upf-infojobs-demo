@@ -1,26 +1,53 @@
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-import streamlit as st
-from langchain.chains import RetrievalQA
 import json
-from langchain.document_loaders import PyPDFLoader
+import yaml
 import tempfile
+import streamlit as st
+
+from langchain.chains import RetrievalQA
+from langchain.document_loaders import PyPDFLoader
 from langchain.vectorstores import Chroma
 from langchain.prompts import ChatPromptTemplate
 from langchain.chat_models import ChatOpenAI
 from dotenv import load_dotenv
-import boto3
-from langchain.llms import Bedrock
 from sentence_transformers import SentenceTransformer
 from chromadb import Embeddings
-from langchain.chains.question_answering import load_qa_chain
-import yaml
 from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.runnable import RunnablePassthrough, RunnableLambda
+from langchain.schema.runnable import RunnablePassthrough
 
-from streamlit.runtime.scriptrunner import add_script_run_ctx
-import concurrent.futures
-from threading import Thread
+
+from vis_streamlit import (plot_job_profile_match, plot_educational_qualifications, 
+                           plot_skills_and_proficiencies, plot_certifications_and_regulatory_knowledge,
+                           plot_spyder)
+
+
+# Mock value for job profile match score (suppose the candidate's profile matches 70% with the job profile)
+job_profile_match_score = 70
+
+# Mock boolean for education match (suppose the candidate has the required educational qualifications)
+education_match = True
+
+# Mock dictionary for skills scores (each skill has a match score out of 1)
+skills_scores = {
+    "Logistics": 0.8,  # 80% match
+    "International Trade": 0.9,  # 90% match
+    "Legal Advisory": 0.7,  # 70% match
+    "Fiscal Advisory": 0.5,  # 50% match
+    "IT": 0.3,  # 30% match
+}
+
+# Mock list for certifications presence (True if the candidate has the certification, False otherwise)
+certifications_presence = [True, False, True, False, True]
+
+# Mock labels for certifications (corresponding to the above presence/absence list)
+certifications_labels = [
+    "Certified Supply Chain Professional",
+    "Certified in Logistics, Transportation and Distribution",
+    "Project Management Professional",
+    "Has Logistics Bachelor",
+    "Occupational Safety and Health Administration Certification"
+]
 
 # -------------------------------
 # Setup App
@@ -30,11 +57,12 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_KEY")
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
-with open('prompt_template.yaml', 'r') as file:
+with open('data/prompt_template.yaml', 'r') as file:
     loaded_templates = yaml.safe_load(file)
 
 # Advanced settings
 st.set_page_config(page_title='My Complex Streamlit App', layout='wide', initial_sidebar_state='expanded')
+st.set_option('deprecation.showPyplotGlobalUse', False)
 
 MODEL_NAME = 'sentence-transformers/paraphrase-multilingual-mpnet-base-v2'
 class SentenceTransformerEmbeddings(Embeddings):
@@ -50,26 +78,26 @@ class SentenceTransformerEmbeddings(Embeddings):
 
 @st.cache_resource
 def load_sentence_transformer(model_name):
-    return SentenceTransformer(model_name)
-class SentenceTransformerEmbeddings(Embeddings):
-    def __init__(self, model_name):
-        self._model_name = model_name
-        self._embedding_function = None
+    return SentenceTransformerEmbeddings(model_name=model_name)#SentenceTransformer(model_name)
+# class SentenceTransformerEmbeddings(Embeddings):
+#     def __init__(self, model_name):
+#         self._model_name = model_name
+#         self._embedding_function = None
 
-    def _load_model(self):
-        if self._embedding_function is None:
-            self._embedding_function = load_sentence_transformer(self._model_name)
+#     def _load_model(self):
+#         if self._embedding_function is None:
+#             self._embedding_function = load_sentence_transformer(self._model_name)
     
-    def embed_documents(self, texts):
-        self._load_model()
-        embeddings = self._embedding_function.encode(texts, convert_to_numpy=True).tolist()
-        return [list(map(float, e)) for e in embeddings]
+#     def embed_documents(self, texts):
+#         self._load_model()
+#         embeddings = self._embedding_function.encode(texts, convert_to_numpy=True).tolist()
+#         return [list(map(float, e)) for e in embeddings]
 
-    def embed_query(self, text):
-        self._load_model()
-        embeddings = self._embedding_function.encode([text], convert_to_numpy=True).tolist()
-        return [list(map(float, e)) for e in embeddings][0]
-sentence_transformer_ef = SentenceTransformerEmbeddings(model_name=MODEL_NAME)
+#     def embed_query(self, text):
+#         self._load_model()
+#         embeddings = self._embedding_function.encode([text], convert_to_numpy=True).tolist()
+#         return [list(map(float, e)) for e in embeddings][0]
+sentence_transformer_ef = load_sentence_transformer(MODEL_NAME)
 
 def initialize_session_state():
     # Initialize session state variables if they don't exist
@@ -90,6 +118,9 @@ def initialize_session_state():
 
     if 'uploaded_files' not in st.session_state:
         st.session_state['uploaded_files'] = []
+
+    if 'show_charts' not in st.session_state:
+        st.session_state['show_charts'] = False
 
 # Call this function at the start of your app to ensure all session state variables are initialized
 initialize_session_state()
@@ -359,7 +390,8 @@ def generate_report():
     #     return None
 
 def display_full_report():
-    with center_column:
+    with right_column:
+        st.markdown("--------------------")
         if st.session_state['processed_cv_output'] is not None and st.session_state['processed_job_offer_output'] is not None:
             with st.spinner('#### Generating Full Report...'):
                 report_content = generate_report()
@@ -368,6 +400,8 @@ def display_full_report():
                 st.markdown("## Full Report Generated by LLM", unsafe_allow_html=True)
                 html_content = dict_to_html(st.session_state['full_report'])
                 st.markdown(html_content, unsafe_allow_html=True)      
+
+                # display_visuals()
 
 
 # Main content
@@ -384,11 +418,306 @@ left_column, center_column, right_column = st.columns([2, 3, 2])
 #         # Display a preview if it's an image
 #         process_cv()
 
+def display_visuals():
+    # Custom CSS to inject into the Streamlit page
+    st.markdown(
+        """
+        <style>
+        .dashboard-container {
+            border: 2px solid #009688;
+            border-radius: 5px;
+            background-color: #fafafa;
+            padding: 8px; /* Reduced padding */
+            margin-bottom: 10px; /* Reduced margin */
+            box-shadow: 1px 1px 4px lightgrey;
+        }
+        .dashboard-title {
+            color: #009688;
+            margin-bottom: 8px; /* Reduced margin */
+            text-align: center;
+            font-size: 1.6em; /* Smaller font size */
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Create two columns within a container
+    with st.container():
+        # col1, col2 = st.columns(2)
+        with center_column:
+            st.markdown('<div class="dashboard-container">', unsafe_allow_html=True)
+            st.markdown('<p class="dashboard-title">Skills and Proficiencies</p>', unsafe_allow_html=True)
+            st.pyplot(plot_skills_and_proficiencies(skills_scores, plot_size=(1, 1)))
+            st.markdown('</div>', unsafe_allow_html=True)
+
+            st.markdown('<div class="dashboard-container">', unsafe_allow_html=True)
+            st.markdown('<p class="dashboard-title">Job Title Similarity *ESCO*</p>', unsafe_allow_html=True)
+            # st.pyplot(plot_job_profile_match(job_profile_match_score, plot_size=(1, 1)))
+            st.pyplot(plot_spyder(plot_size=(1, 1)))
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+        
+        with right_column:
+            st.markdown('<div class="dashboard-container">', unsafe_allow_html=True)
+            st.markdown('<p class="dashboard-title">Language Match</p>', unsafe_allow_html=True)
+            st.pyplot(plot_educational_qualifications(education_match, plot_size=(2, 1)))
+            st.markdown('</div>', unsafe_allow_html=True)
+
+            st.markdown('<div class="dashboard-container">', unsafe_allow_html=True)
+            st.markdown('<p class="dashboard-title">Educational Qualifications</p>', unsafe_allow_html=True)
+            st.pyplot(plot_certifications_and_regulatory_knowledge(certifications_presence, certifications_labels, plot_size=(3, 2)))
+            st.markdown('</div>', unsafe_allow_html=True)
+
+
+# display_visuals()
 display_cv_processing()
 
-# display_job_offer_processing()
+display_job_offer_processing()
 
-# display_full_report()
+def similarity_bar(score):
+    st.write('Similarity:', f'{score:.2f}')
+    st.progress(score)
+
+
+# st.markdown('### Education Details')
+
+# Create two columns for the CV and job offer sections
+from vis_streamlit import (display_similarity_bar, display_education_comparison,
+                     display_language_comparison, create_matplotlib_chart,
+                     create_seaborn_chart, toggle_charts)
+
+# Your Streamlit code to take input and store it in JSON format
+json_params = {
+    'score': 0.76,
+    'cv_education': ["Bachelor of Arts, Communications"],
+    'job_offer_education': ["Diplomatura in Marketing"],
+    'languages_cv': {'English': '🇬🇧'},
+    'languages_job_requirement': {'Catalan': '🏳', 'Spanish': '🇪🇸', 'English': '🇬🇧'},
+    'data': {'x': [1, 2, 3, 4], 'y': [10, 11, 12, 13]},
+    'show_charts': True
+}
+
+def toggle_charts():
+    st.session_state['show_charts'] = not st.session_state['show_charts']
+    
+    
+if st.session_state['cv_file'] is not None:
+    with center_column:
+        # Call the functions and pass the parameters as needed
+        display_education_comparison(json_params)
+        display_language_comparison(json_params)
+        display_similarity_bar(json_params)
+        st.markdown("-------------------------------------------------")
+        if st.button('Show/Hide Charts'):
+            toggle_charts()
+
+        if st.session_state.get('show_charts', False):
+            # col1, col2 = st.columns(2)
+
+            plot_size = (1,1)
+            #  with st.container:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.subheader("Job Profile Match")
+                st.write("This pie chart shows the percentage match of the candidate's job profile with the job description.")
+                # Call the function and use st.pyplot to render the figure
+                st.pyplot(plot_job_profile_match(job_profile_match_score, plot_size=plot_size))
+
+            with col2:
+                st.subheader("Educational Qualifications")
+                st.write("The bar chart indicates whether the candidate has the educational qualifications required for the job.")
+                # Call the function and use st.pyplot to render the figure
+                st.pyplot(plot_educational_qualifications(education_match, plot_size=plot_size))
+
+            with col1:
+                st.subheader("Skills and Proficiencies")
+                st.write("The radar chart visualizes the candidate's skill levels across various domains required for the job.")
+                # Call the function and use st.pyplot to render the figure
+                st.pyplot(plot_skills_and_proficiencies(skills_scores, plot_size=plot_size))
+
+            with col2:
+                st.subheader("Certifications and Regulatory Knowledge")
+                st.write("This bar chart shows whether the candidate possesses the specific certifications or knowledge areas important for the position.")
+                # Call the function and use st.pyplot to render the figure
+                st.pyplot(plot_certifications_and_regulatory_knowledge(certifications_presence, certifications_labels, plot_size=plot_size))
+
+
+if st.session_state['show_charts']:
+    display_full_report()
+
+
+
+
+
+
+
+
+
+
+
+
+#     # Check the session state to decide whether to show the charts
+# if st.session_state.get('show_charts', False):
+#     create_matplotlib_chart(json_params)
+#     create_seaborn_chart(json_params)
+# Column for 'Education for CV'
+
+#     col1, col2 = st.columns(2)
+
+#     with col1:
+#         st.markdown('### Education for CV')
+#         st.text('Bachelor of Arts,\nCommunications')
+
+#     # Column for 'Required Education by Job Offer'
+#     with col2:
+#         st.markdown('### Required Education by Job Offer')
+#         st.text('Diplomatura')
+
+    
+#     # Display the similarity score at the bottom
+#     similarity = 0.76
+#     similarity_bar(similarity)
+
+#     # Function to display similarity score with styling
+#     def similarity_bar(score):
+#         # Convert the score to a percentage for display
+#         score_percentage = f"{score:.2%}"
+#         # Create a progress bar with the score
+#         st.progress(score)
+#         # Display the score as text below the progress bar
+#         st.write(f"Similarity Score: {score_percentage}")
+
+#     # Education data for CV and Job Offer
+#     cv_education = [
+#         "Bachelor of Arts, Communications",
+#         "Master of Science, Data Analytics"
+#     ]
+
+#     job_offer_education = [
+#         "Diplomatura in Marketing",
+#         "Advanced Certification in Public Relations"
+#     ]
+
+#     # Split the screen into two columns for CV and Job Offer
+#     col1, col2 = st.columns(2)
+
+#     # Column for 'Education for CV'
+#     with col1:
+#         st.markdown('### Education for CV')
+#         # Display each education qualification as a bullet point
+#         for education in cv_education:
+#             st.markdown(f"- {education}")
+
+#     # Column for 'Required Education by Job Offer'
+#     with col2:
+#         st.markdown('### Required Education by Job Offer')
+#         # Display each required education qualification as a bullet point
+#         for education in job_offer_education:
+#             st.markdown(f"- {education}")
+
+#     # Display the similarity score at the bottom
+#     similarity = 0.76
+#     similarity_bar(similarity)
+
+
+
+
+#     # Define the languages and corresponding flag emojis
+#     languages_cv = {
+#         'English': '🇬🇧'
+#     }
+#     languages_job_requirement = {
+#         'Catalan': '🏳', # There's no specific emoji for the Catalan flag, so we use a placeholder.
+#         'Spanish': '🇪🇸',
+#         'English': '🇬🇧'
+#     }
+
+
+#     st.markdown("-------------------------------------------------")
+#     st.markdown('### Language Requirements Comparison')
+
+#     col1, col2 = st.columns(2)
+#     # Fill in the CV column
+#     with col1:
+#         st.markdown('#### CV Languages')
+#         for language, flag in languages_cv.items():
+#             st.write(f"{flag} {language}")
+
+#     # Fill in the Job Requirement column
+#     with col2:
+#         st.markdown('#### Job Requirement Languages')
+#         for language, flag in languages_job_requirement.items():
+#             st.write(f"{flag} {language}")
+
+# import pandas as pd
+# import matplotlib.pyplot as plt
+# import seaborn as sns
+# # Sample data
+# df = pd.DataFrame({
+#     'x': [1, 2, 3, 4],
+#     'y': [10, 11, 12, 13]
+# })
+
+# # Function to create a Matplotlib plot
+# def create_matplotlib_chart(data):
+#     plt.figure(figsize=(6, 4))
+#     sns.lineplot(data=data, x='x', y='y')
+#     plt.tight_layout()
+#     return plt
+
+# # Function to create a Seaborn plot
+# def create_seaborn_chart(data):
+#     plt.figure(figsize=(6, 4))
+#     sns.barplot(data=data, x='x', y='y')
+#     plt.tight_layout()
+#     return plt
+
+
+# # Initialize session state
+# if 'show_charts' not in st.session_state:
+#     st.session_state['show_charts'] = False
+
+# # Define function to toggle the state
+# def toggle_charts():
+#     st.session_state['show_charts'] = not st.session_state['show_charts']
+
+# with center_column:
+#     # Button to toggle charts and report visibility
+#     st.button('Show/Hide Charts and Report', on_click=toggle_charts)
+
+#     # If the state is True, display charts and report
+#     if st.session_state['show_charts']:
+#         # Split the screen into two columns
+#         col1, col2 = st.columns(2)
+        
+#         with col1:
+#             # Display Matplotlib chart in the left column
+#             st.write("Matplotlib Chart:")
+#             plt1 = create_matplotlib_chart(df)
+#             st.pyplot(plt1)
+            
+#             # Display Seaborn chart below the Matplotlib chart
+#             st.write("Seaborn Chart:")
+#             plt2 = create_seaborn_chart(df)
+#             st.pyplot(plt2)
+        
+#         with col2:
+#             # Display the report in the right column
+#             st.write("Report:")
+#             st.text("Here is some text that represents the report...")
+            
+#             # You can also use st.markdown for more complex formatting
+#             st.markdown("""
+#                 ## Report Heading
+#                 - Point 1
+#                 - Point 2
+#                 - Point 3
+#             """)
+
+
+
+
 
 # with st.container():
 #     with center_column:
@@ -436,53 +765,27 @@ display_cv_processing()
 #                     st.write(f"{function_name} completed with result: {result}")
 #                 except Exception as exc:
 #                     st.write(f"{function_name} generated an exception: {exc}")
-from vis_streamlit import (plot_job_profile_match, plot_educational_qualifications, 
-                           plot_skills_and_proficiencies, plot_certifications_and_regulatory_knowledge)
 
 
-# Mock value for job profile match score (suppose the candidate's profile matches 70% with the job profile)
-job_profile_match_score = 70
 
-# Mock boolean for education match (suppose the candidate has the required educational qualifications)
-education_match = True
 
-# Mock dictionary for skills scores (each skill has a match score out of 1)
-skills_scores = {
-    "Logistics": 0.8,  # 80% match
-    "International Trade": 0.9,  # 90% match
-    "Legal Advisory": 0.7,  # 70% match
-    "Fiscal Advisory": 0.5,  # 50% match
-    "Analytical Skills": 0.3,  # 30% match
-}
 
-# Mock list for certifications presence (True if the candidate has the certification, False otherwise)
-certifications_presence = [True, False, True, False, True]
+# # Use the columns to display the charts
+# with center_column:
+#     with st.container():
+#         st.subheader("Job Profile Match")
+#         st.pyplot(plot_job_profile_match(job_profile_match_score))
+#     with st.container():
+#         st.subheader("Skills and Proficiencies")
+#         st.pyplot(plot_skills_and_proficiencies(skills_scores))
 
-# Mock labels for certifications (corresponding to the above presence/absence list)
-certifications_labels = [
-    "Certified Supply Chain Professional",
-    "Certified in Logistics, Transportation and Distribution",
-    "Project Management Professional",
-    "Certified Compliance & Ethics Professional",
-    "Occupational Safety and Health Administration Certification"
-]
-
-# Use the columns to display the charts
-with center_column:
-    with st.container():
-        st.subheader("Job Profile Match")
-        st.pyplot(plot_job_profile_match(job_profile_match_score))
-    with st.container():
-        st.subheader("Skills and Proficiencies")
-        st.pyplot(plot_skills_and_proficiencies(skills_scores))
-
-with right_column:
-    with st.container():
-        st.subheader("Educational Qualifications")
-        st.pyplot(plot_educational_qualifications(education_match))
-    with st.container():
-        st.subheader("Certifications and Regulatory Knowledge")
-        st.pyplot(plot_certifications_and_regulatory_knowledge(certifications_presence, certifications_labels))
+# with right_column:
+#     with st.container():
+#         st.subheader("Educational Qualifications")
+#         st.pyplot(plot_educational_qualifications(education_match))
+#     with st.container():
+#         st.subheader("Certifications and Regulatory Knowledge")
+#         st.pyplot(plot_certifications_and_regulatory_knowledge(certifications_presence, certifications_labels))
 
 # with center_column:
 #     with right_column:
