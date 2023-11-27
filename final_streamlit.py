@@ -6,7 +6,8 @@ import tempfile
 import streamlit as st
 
 from langchain.chains import RetrievalQA
-from langchain.document_loaders import PyPDFLoader
+# from langchain.document_loaders import PyPDFLoader
+from unstructured.partition.auto import partition
 from langchain.vectorstores import Chroma
 from langchain.prompts import ChatPromptTemplate
 from langchain.chat_models import ChatOpenAI
@@ -75,28 +76,10 @@ class SentenceTransformerEmbeddings(Embeddings):
         embeddings = self._embedding_function.encode([text], convert_to_numpy=True).tolist()
         return [list(map(float, e)) for e in embeddings][0]
 
-
 @st.cache_resource
 def load_sentence_transformer(model_name):
     return SentenceTransformerEmbeddings(model_name=model_name)#SentenceTransformer(model_name)
-# class SentenceTransformerEmbeddings(Embeddings):
-#     def __init__(self, model_name):
-#         self._model_name = model_name
-#         self._embedding_function = None
 
-#     def _load_model(self):
-#         if self._embedding_function is None:
-#             self._embedding_function = load_sentence_transformer(self._model_name)
-    
-#     def embed_documents(self, texts):
-#         self._load_model()
-#         embeddings = self._embedding_function.encode(texts, convert_to_numpy=True).tolist()
-#         return [list(map(float, e)) for e in embeddings]
-
-#     def embed_query(self, text):
-#         self._load_model()
-#         embeddings = self._embedding_function.encode([text], convert_to_numpy=True).tolist()
-#         return [list(map(float, e)) for e in embeddings][0]
 sentence_transformer_ef = load_sentence_transformer(MODEL_NAME)
 
 def initialize_session_state():
@@ -208,8 +191,10 @@ def process_cv(cv_file):
             tmp_file.write(cv_file.getvalue())
             tmp_file_path = tmp_file.name
 
-        loader = PyPDFLoader(tmp_file_path, extract_images=True)
-        cv = loader.load()
+        # loader = PyPDFLoader(tmp_file_path, extract_images=True)
+        # cv = loader.load()
+        elements = partition(filename=tmp_file_path)
+        cv = [str(el) for el in elements]
 
         prompt_template = loaded_templates['cv-parsing-prompt'].strip()
         prompt = ChatPromptTemplate.from_template(prompt_template)
@@ -219,7 +204,7 @@ def process_cv(cv_file):
         processed_cv_output = json.loads(response)
         st.session_state['processed_cv_output'] = processed_cv_output
 
-        st.session_state['cv_file'] = cv[0].page_content
+        st.session_state['cv_file'] = cv#[0].page_content
 
         return dict_to_html(processed_cv_output)
     except Exception as e:

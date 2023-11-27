@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: new-streamlit-app
+spec:
+  selector:
+    matchLabels:
+      app: new-streamlit-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: new-streamlit-app
+    spec:
+      containers:
+      - name: new-streamlit-app
+        image: my_new_streamlit_app:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8501
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: new-streamlit-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 8501
+  selector:
+    app: new-streamlit-app
