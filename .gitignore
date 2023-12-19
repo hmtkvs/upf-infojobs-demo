@@ -1,8 +1,6 @@
-venv/
-mpnet_embeddings_db
-ESCO_mpnet_db
-__pycache__/
-__pycache__/*
-__pycache__
-data
+/venv/
+/mpnet_embeddings_db
+/ESCO_mpnet_db
+/__pycache__/
+/data
 .env
