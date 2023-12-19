@@ -1,5 +1,4 @@
 boto3==1.28.57
-chromadb==0.4.15
 langchain==0.0.336
 matplotlib==3.8.1
 numpy==1.26.2
@@ -10,6 +9,7 @@ PyYAML==6.0.1
 seaborn==0.13.0
 sentence_transformers==2.2.2
 streamlit==1.28.2
+chromadb
 openai
 unstructured[all-docs]
 watchdog
