@@ -243,6 +243,7 @@ def display_cv_processing():
                             file_info['processed'] = True
                             html_content = process_cv(file_info['file'])
                             display_processed_cv(html_content)
+                        
 
                     if file_info['processed']:
                         # Display star ratings with visual representation
@@ -259,6 +260,8 @@ def display_cv_processing():
                             on_change=update_score, 
                             args=(index, stars_options[score_index][1])
                         )
+
+                        
 
             # CSS to style the expanders and other elements
             st.markdown("""
@@ -312,28 +315,6 @@ def display_job_offer_processing():
             html_content = process_job_offer(job_offer_file)
             st.markdown("## Processed Job Offer", unsafe_allow_html=True)
             st.markdown(html_content, unsafe_allow_html=True)
-# Streamlit interface for uploading and processing a PDF file
-# def display_job_offer_processing():
-#     with right_column:
-#         # Streamlit file uploader
-#         uploaded_file = st.file_uploader("Upload your PDF job offer", type="pdf", key='job_offer_uploader')
-#         if uploaded_file is not None:
-#             # Using a temporary file to read the PDF content
-#             with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-#                 tmp_file.write(uploaded_file.getvalue())
-#                 tmp_file_path = tmp_file.name
-
-#             # Load the PDF file and extract text
-#             loader = PyPDFLoader(tmp_file_path)
-#             job_offer = loader.load()  # Adjust this line based on how your PyPDFLoader works
-            
-#             # Process the extracted text
-#             html_content = process_job_offer(job_offer)
-            
-#             # Display the processed job offer
-#             st.markdown("## Processed Job Offer")
-#             st.markdown(html_content, unsafe_allow_html=True)
-
 
 # -------------------------------
 # ESCO Processing Function
@@ -350,7 +331,6 @@ def display_job_offer_processing():
 # -------------------------------
 # Full Report Processing Functions
 # -------------------------------
-
 
 def generate_report():
     # try:
@@ -395,13 +375,6 @@ st.title("UPF-InfoJobs Demo App")
 # Mimic two sidebars by using columns
 left_column, center_column, right_column = st.columns([2, 3, 2])
 
-# with left_column:
-#     st.header("CV Upload")
-#     st.session_state.cv_file = st.file_uploader("Choose a CV file", type=['pdf', 'png', 'jpg'], key='cv_uploader')
-#     if st.session_state.cv_file is not None:
-#         st.success("CV uploaded successfully: " + st.session_state.cv_file.name)
-#         # Display a preview if it's an image
-#         process_cv()
 
 def display_visuals():
     # Custom CSS to inject into the Streamlit page
@@ -506,25 +479,21 @@ if st.session_state['cv_file'] is not None:
             with col1:
                 st.subheader("Job Profile Match")
                 st.write("This pie chart shows the percentage match of the candidate's job profile with the job description.")
-                # Call the function and use st.pyplot to render the figure
                 st.pyplot(plot_job_profile_match(job_profile_match_score, plot_size=plot_size))
 
             with col2:
                 st.subheader("Educational Qualifications")
                 st.write("The bar chart indicates whether the candidate has the educational qualifications required for the job.")
-                # Call the function and use st.pyplot to render the figure
                 st.pyplot(plot_educational_qualifications(education_match, plot_size=plot_size))
 
             with col1:
                 st.subheader("Skills and Proficiencies")
                 st.write("The radar chart visualizes the candidate's skill levels across various domains required for the job.")
-                # Call the function and use st.pyplot to render the figure
                 st.pyplot(plot_skills_and_proficiencies(skills_scores, plot_size=plot_size))
 
             with col2:
                 st.subheader("Certifications and Regulatory Knowledge")
                 st.write("This bar chart shows whether the candidate possesses the specific certifications or knowledge areas important for the position.")
-                # Call the function and use st.pyplot to render the figure
                 st.pyplot(plot_certifications_and_regulatory_knowledge(certifications_presence, certifications_labels, plot_size=plot_size))
 
 
@@ -532,271 +501,4 @@ if st.session_state['show_charts']:
     display_full_report()
 
 
-
-
-
-
-
-
-
-
-
-
-#     # Check the session state to decide whether to show the charts
-# if st.session_state.get('show_charts', False):
-#     create_matplotlib_chart(json_params)
-#     create_seaborn_chart(json_params)
-# Column for 'Education for CV'
-
-#     col1, col2 = st.columns(2)
-
-#     with col1:
-#         st.markdown('### Education for CV')
-#         st.text('Bachelor of Arts,\nCommunications')
-
-#     # Column for 'Required Education by Job Offer'
-#     with col2:
-#         st.markdown('### Required Education by Job Offer')
-#         st.text('Diplomatura')
-
-    
-#     # Display the similarity score at the bottom
-#     similarity = 0.76
-#     similarity_bar(similarity)
-
-#     # Function to display similarity score with styling
-#     def similarity_bar(score):
-#         # Convert the score to a percentage for display
-#         score_percentage = f"{score:.2%}"
-#         # Create a progress bar with the score
-#         st.progress(score)
-#         # Display the score as text below the progress bar
-#         st.write(f"Similarity Score: {score_percentage}")
-
-#     # Education data for CV and Job Offer
-#     cv_education = [
-#         "Bachelor of Arts, Communications",
-#         "Master of Science, Data Analytics"
-#     ]
-
-#     job_offer_education = [
-#         "Diplomatura in Marketing",
-#         "Advanced Certification in Public Relations"
-#     ]
-
-#     # Split the screen into two columns for CV and Job Offer
-#     col1, col2 = st.columns(2)
-
-#     # Column for 'Education for CV'
-#     with col1:
-#         st.markdown('### Education for CV')
-#         # Display each education qualification as a bullet point
-#         for education in cv_education:
-#             st.markdown(f"- {education}")
-
-#     # Column for 'Required Education by Job Offer'
-#     with col2:
-#         st.markdown('### Required Education by Job Offer')
-#         # Display each required education qualification as a bullet point
-#         for education in job_offer_education:
-#             st.markdown(f"- {education}")
-
-#     # Display the similarity score at the bottom
-#     similarity = 0.76
-#     similarity_bar(similarity)
-
-
-
-
-#     # Define the languages and corresponding flag emojis
-#     languages_cv = {
-#         'English': '🇬🇧'
-#     }
-#     languages_job_requirement = {
-#         'Catalan': '🏳', # There's no specific emoji for the Catalan flag, so we use a placeholder.
-#         'Spanish': '🇪🇸',
-#         'English': '🇬🇧'
-#     }
-
-
-#     st.markdown("-------------------------------------------------")
-#     st.markdown('### Language Requirements Comparison')
-
-#     col1, col2 = st.columns(2)
-#     # Fill in the CV column
-#     with col1:
-#         st.markdown('#### CV Languages')
-#         for language, flag in languages_cv.items():
-#             st.write(f"{flag} {language}")
-
-#     # Fill in the Job Requirement column
-#     with col2:
-#         st.markdown('#### Job Requirement Languages')
-#         for language, flag in languages_job_requirement.items():
-#             st.write(f"{flag} {language}")
-
-# import pandas as pd
-# import matplotlib.pyplot as plt
-# import seaborn as sns
-# # Sample data
-# df = pd.DataFrame({
-#     'x': [1, 2, 3, 4],
-#     'y': [10, 11, 12, 13]
-# })
-
-# # Function to create a Matplotlib plot
-# def create_matplotlib_chart(data):
-#     plt.figure(figsize=(6, 4))
-#     sns.lineplot(data=data, x='x', y='y')
-#     plt.tight_layout()
-#     return plt
-
-# # Function to create a Seaborn plot
-# def create_seaborn_chart(data):
-#     plt.figure(figsize=(6, 4))
-#     sns.barplot(data=data, x='x', y='y')
-#     plt.tight_layout()
-#     return plt
-
-
-# # Initialize session state
-# if 'show_charts' not in st.session_state:
-#     st.session_state['show_charts'] = False
-
-# # Define function to toggle the state
-# def toggle_charts():
-#     st.session_state['show_charts'] = not st.session_state['show_charts']
-
-# with center_column:
-#     # Button to toggle charts and report visibility
-#     st.button('Show/Hide Charts and Report', on_click=toggle_charts)
-
-#     # If the state is True, display charts and report
-#     if st.session_state['show_charts']:
-#         # Split the screen into two columns
-#         col1, col2 = st.columns(2)
-        
-#         with col1:
-#             # Display Matplotlib chart in the left column
-#             st.write("Matplotlib Chart:")
-#             plt1 = create_matplotlib_chart(df)
-#             st.pyplot(plt1)
-            
-#             # Display Seaborn chart below the Matplotlib chart
-#             st.write("Seaborn Chart:")
-#             plt2 = create_seaborn_chart(df)
-#             st.pyplot(plt2)
-        
-#         with col2:
-#             # Display the report in the right column
-#             st.write("Report:")
-#             st.text("Here is some text that represents the report...")
-            
-#             # You can also use st.markdown for more complex formatting
-#             st.markdown("""
-#                 ## Report Heading
-#                 - Point 1
-#                 - Point 2
-#                 - Point 3
-#             """)
-
-
-
-
-
-# with st.container():
-#     with center_column:
-#         # st.header("Retrieved ESCO Documents")
-#         # if st.session_state.pre_analysis_output != "":
-#         #     try:
-#         #         exp1 = st.session_state['pre_analysis_output']['experiences'][0]
-#         #     except Exception as e:
-#         #         exp1 = json.dumps(st.session_state['pre_analysis_output'])
-#         #         print("Retrieved ESCO Documents --> ", e)
-#         #     esco_content = retrieve_esco_documents(exp1)
-#         #     st.write(esco_content)
-
-#         # st.header("Analysis of Job Offer")
-#         # if st.session_state.job_offer_file is not None:
-#         #     analysis_content = analyze_job_offer()
-#         #     st.write(analysis_content)
-        
-
-#         # st.header("Full Report Generated by LLLM")
-#         if st.session_state['processed_job_offer'] is not None and st.session_state['processed_cv_output'] is not None:
-#             generate_full_report()
-# Streamlit code to create a button and run tasks concurrently
-
-# right_column = st.empty()
-# center_column = st.empty()
-# left_column = st.empty()
-
-
-#     if st.button('Run Tasks'):
-#         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-#             # Schedule the functions to be executed
-#             future_to_function = {
-#                 executor.submit(display_cv_processing): "CV Processing",
-#                 executor.submit(display_job_offer_processing): "Job Offer Processing",
-#                 executor.submit(display_full_report): "Full Report"
-#             }
-            
-#             # Collect the results as they are completed
-#             for future in concurrent.futures.as_completed(future_to_function):
-#                 function_name = future_to_function[future]
-#                 try:
-#                     result = future.result()
-#                     # Process the result (e.g., display it in the Streamlit app)
-#                     st.write(f"{function_name} completed with result: {result}")
-#                 except Exception as exc:
-#                     st.write(f"{function_name} generated an exception: {exc}")
-
-
-
-
-
-# # Use the columns to display the charts
-# with center_column:
-#     with st.container():
-#         st.subheader("Job Profile Match")
-#         st.pyplot(plot_job_profile_match(job_profile_match_score))
-#     with st.container():
-#         st.subheader("Skills and Proficiencies")
-#         st.pyplot(plot_skills_and_proficiencies(skills_scores))
-
-# with right_column:
-#     with st.container():
-#         st.subheader("Educational Qualifications")
-#         st.pyplot(plot_educational_qualifications(education_match))
-#     with st.container():
-#         st.subheader("Certifications and Regulatory Knowledge")
-#         st.pyplot(plot_certifications_and_regulatory_knowledge(certifications_presence, certifications_labels))
-
-# with center_column:
-#     with right_column:
-#         with st.container:
-#             col1, col2 = st.columns(2)
-#             with col1:
-#                 st.subheader("Job Profile Match")
-#                 st.write("This pie chart shows the percentage match of the candidate's job profile with the job description.")
-#                 # Call the function and use st.pyplot to render the figure
-#                 st.pyplot(plot_job_profile_match(job_profile_match_score))
-
-#             with col2:
-#                 st.subheader("Educational Qualifications")
-#                 st.write("The bar chart indicates whether the candidate has the educational qualifications required for the job.")
-#                 # Call the function and use st.pyplot to render the figure
-#                 st.pyplot(plot_educational_qualifications(education_match))
-
-#             with col1:
-#                 st.subheader("Skills and Proficiencies")
-#                 st.write("The radar chart visualizes the candidate's skill levels across various domains required for the job.")
-#                 # Call the function and use st.pyplot to render the figure
-#                 st.pyplot(plot_skills_and_proficiencies(skills_scores))
-
-#             with col2:
-#                 st.subheader("Certifications and Regulatory Knowledge")
-#                 st.write("This bar chart shows whether the candidate possesses the specific certifications or knowledge areas important for the position.")
-#                 # Call the function and use st.pyplot to render the figure
-#                 st.pyplot(plot_certifications_and_regulatory_knowledge(certifications_presence, certifications_labels))
 
