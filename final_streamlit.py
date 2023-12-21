@@ -69,7 +69,7 @@ except:
     OPENAI_API_KEY = os.getenv("OPENAI_KEY")
     os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
-with open('data/prompt_template.yaml', 'r') as file:
+with open('prompt_template.yaml', 'r') as file:
     loaded_templates = yaml.safe_load(file)
 
 # Advanced settings

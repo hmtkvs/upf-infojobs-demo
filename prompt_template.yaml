@@ -1,0 +1,51 @@
+cv-parsing-prompt: "\n        You are an expert in human resources and your job is\
+  \ to extract relevant information from curriculums.\n        For each experience\
+  \ in the curriculum, you should return a json containing the following information:\n\
+  \        - Experiences: List of experiences containing relevant fields.\n      \
+  \      - job_title: Associated job title\n            - description: Description\
+  \ of the role\n            - skills: List of skills mentioned\n        - Languages:\
+  \ List of languages known by the candidate.\n        - Highlights: Brief summary\
+  \ of the candidate's profile.\n\n        Here is the curriculum:\n        ```\n\
+  \        {cv}\n        ```\n        The response should be only a json.\n    "
+full-report-template: "\n        I have a curriculum vitae (CV) and a job offer. I\
+  \ would like you to compare the two and provide insights on how well the CV matches\
+  \ the job offer's requirements. Please use a retriever to consult the ESCO (European\
+  \ Skills, Competences, Qualifications and Occupations) Taxonomy to extract relevant\
+  \ job profile information. This will inform a more accurate comparison between the\
+  \ CV and the job offer.\n        Be concise and objective.\n        Curriculum Vitae:\n\
+  \        ```\n        {cv}\n        ```\n\n        Job Offer:\n        ```\n   \
+  \     {job_offer}\n        ```\n        Instructions for the OpenAI model:\n   \
+  \         1. Use the ESCO Taxonomy to find job profiles that correspond with the\
+  \ experiences and qualifications listed in the CV.\n            2. Critically evaluate\
+  \ the relevance of each experience and qualification in the CV against the specific\
+  \ requirements of the job offer.\n            3. Focus on the precise nature of\
+  \ the job offer, considering the essential qualifications, detailed responsibilities,\
+  \ and the level of expertise required.\n            4. Provide a realistic analysis\
+  \ that identifies:\n            - Direct matches and transferable skills between\
+  \ the CV and the job offer.\n            - Any qualifications or experiences in\
+  \ the CV that are exactly what the job offer requires.\n            - Areas where\
+  \ the CV falls short of the job offer's requirements, including lack of specific\
+  \ experiences, necessary qualifications, or required certifications.\n         \
+  \   5. Avoid using expressions that directly affect the decision, are subjective\
+  \ and dominant. Be concrete and clear, explain your thoughts in a transparent way.\n\
+  \n        Return the analysis in the following JSON structure:\n        {{\n   \
+  \         \"ESCO Analysis\": {{\n                \"Educational Qualifications Comparison\"\
+  : \"\",\n                \"Skills and Proficiencies Match\": \"\",\n           \
+  \     \"Certifications and Regulatory Knowledge\": \"\",\n                \"Job\
+  \ Profile Match\": \"\",\n                \"Overall Summary\": {{\n            \
+  \        \"Strong Matches\": \"\",\n                    \"Potential Gaps\": \"\"\
+  \n                }}\n            }}\n        }}\n\n        Note: The insights should\
+  \ be based on the retrieved information from the ESCO Taxonomy to ensure an informed\
+  \ and accurate analysis.\n        "
+job-offer-processing-prompt: "\n        Please use a retriever to find job offers\
+  \ similar to the following: \"Job Offer: {joboffer}\"\n\n        In the results,\
+  \ I would like you to:\n        1. Highlight the key responsibilities and qualifications\
+  \ of the given job offer and spesify. \n        2. Identify and summarize the skills\
+  \ and qualifications that are commonly sought in similar job offers.\n\n       \
+  \ 1. Job Offer Summary:\n        - Title: \n        - Department: \n        - Responsibilities:\n\
+  \n        2. Commonly Sought Skills and Qualifications:\n        - Educational Background:\
+  \ \n        - Experience: \n        - Skills: \n        - Technical Proficiencies:\
+  \ \n        - Regulatory Knowledge: \n        - Certifications: \n\n        Note:\
+  \ The specific requirements and preferences for qualifications may vary between\
+  \ job offers.\n\n        Please return the information in the JSON format.\n   \
+  \     "
