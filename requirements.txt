@@ -9,7 +9,7 @@ PyYAML==6.0.1
 seaborn==0.13.0
 sentence_transformers==2.2.2
 streamlit==1.28.2
-pysqlite3-binary
+chromadb-pysqlite3
 chromadb
 openai
 unstructured[all-docs]
