@@ -1,5 +1,5 @@
 boto3==1.28.57
-chromadb
+chromadb==0.3.29
 langchain==0.0.336
 matplotlib==3.8.1
 numpy==1.26.2
