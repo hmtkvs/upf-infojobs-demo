@@ -1,6 +1,6 @@
 boto3==1.28.57
 pysqlite3-binary
-chromadb
+chromadb==0.4.15
 langchain==0.0.336
 matplotlib==3.8.1
 numpy==1.26.2
