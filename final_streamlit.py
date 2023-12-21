@@ -18,7 +18,8 @@ from sentence_transformers import SentenceTransformer
 # import sys
 # sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
-from chromadb import Embeddings
+# from chromadb import Embeddings
+from chromadb.utils import embedding_functions
 from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
 
@@ -76,7 +77,7 @@ st.set_page_config(page_title='My Complex Streamlit App', layout='wide', initial
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
 MODEL_NAME = 'sentence-transformers/paraphrase-multilingual-mpnet-base-v2'
-class SentenceTransformerEmbeddings(Embeddings):
+class SentenceTransformerEmbeddings(embedding_functions.SentenceTransformerEmbeddingFunction):
     def __init__(self, model_name):
         self._embedding_function = SentenceTransformer(model_name)
     def embed_documents(self, texts):
